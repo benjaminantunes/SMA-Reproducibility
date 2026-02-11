@@ -1,0 +1,573 @@
+---
+title: "Compte rendu 8 voisins - cf methodo overleaf"
+output: 
+  html_document :
+    code_folding: 
+    df_print: paged
+    theme: flatly
+    highlight: tango
+    toc: yes
+    toc_float: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+    number_sections : true
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+memory.limit(size=1000000000000)
+options(knitr.table.format = "html")
+
+library(readxl)
+library(readr)
+library(here)
+library(archive)
+library(data.table)
+library(tidyverse)
+library(summarytools)
+library(ggplot2)
+library(survey)
+library(lubridate)
+library(openxlsx) # enregistrer df en xlsx
+library(plotly)
+#library(kableExtra)
+library(ggplot2)
+library(BBmisc)
+library(berryFunctions)
+# times series
+library(tseries)
+library(prophet)
+library(MLmetrics)
+# DTW
+library(dtw)
+library(purrr)
+# Clustering
+library(dtwclust)
+
+library(reshape2)
+library(factoextra)
+library(forecast)
+library(urca)
+library(pastecs)
+
+library(ggpubr)
+
+library(spatialEco)
+
+library(zoo) #roll_mean
+
+path <- setwd("C:/Users/2023hh003/Documents/GitHub/Repro-SEIR")
+```
+
+# REFS 
+
+https://www.heka.ai/fr/nos-publications/clustering-de-series-temporelles
+
+https://otexts.com/fpp2/residuals.html
+
+https://fish-forecast.github.io/Fish-Forecast-Bookdown/3-4-fitting-arima-models.html
+
+https://otexts.com/fpp2/stochastic-and-deterministic-trends.html
+
+
+# SMA 
+
+```{r, include=FALSE}
+load(file = paste0(path,"/2-Data/df_SMA_serveur_VF.RData"))
+```
+
+## Graphiques
+
+#### Infected
+
+```{r}
+df <- df %>% 
+    rename("Language" = "Langage")
+
+df[Language == "Netlogo Dorian", Language := "Netlogo"]
+df[Language == "Netlogo Etienne", Language := "Netlogo 2"]
+df[Language == "Netlogo Hanae", Language := "Netlogo 3"]
+
+df <- df[Language != "Netlogo 2",]
+df <- df[Language != "Netlogo 3",]
+
+ggplot(df, aes(x=as.factor(step), y=I, colour = Language))+
+  geom_point(size=1.5) +
+  theme_classic() +
+  scale_colour_manual(values = c("blue", "green3", "red", "lightblue", "yellow", "brown", "pink")) +
+  labs(x="Time (days)", y="Infected", colour = "Languages & Platforms") +
+  scale_x_discrete(breaks = seq(0, 751, 50)) 
+
+
+ggplot(df, aes(x=as.factor(step), y=I, colour = Language))+
+  geom_point(size=1.5) +
+  theme_classic() +
+  scale_colour_manual(values = c('#bebada','#4477AA','#8dd3c7','#b3de69','#fdb462','#f85345','#ffb2b6')) +
+  labs(x="Time (days)", y="Infected", colour = "Languages & Platforms") +
+  scale_x_discrete(breaks = seq(0, 751, 50)) 
+
+# '#ffffb3',
+```
+
+```{r}
+ggplot(df[step<=100], aes(x=as.factor(step), y=I, colour = Language))+
+  geom_point(size=1.5) +
+  theme_classic() +
+  scale_colour_manual(values = c("blue", "green3", "red", "lightblue", "yellow", "brown", "pink")) +
+  labs(x="Time (days)", y="Infected") +
+  scale_x_discrete(breaks = seq(0, 751, 50))
+
+ggplot(df[step<=100], aes(x=as.factor(step), y=I, colour = Language))+
+  geom_point(size=1.5) +
+  theme_classic() +
+  scale_colour_manual(values = c('#bebada','#4477AA','#8dd3c7','#b3de69','#fdb462','#f85345','#ffb2b6')) +
+  labs(x="Time (days)", y="Infected", colour = "Languages & Platforms") +
+  scale_x_discrete(breaks = seq(0, 751, 50))
+```
+
+
+https://plotly.com/python/continuous-error-bars/
+
+https://ggplot2.tidyverse.org/reference/geom_ribbon.html
+
+# Toutes couleurs !!!
+https://r-charts.com/color-palettes/
+
+```{r}
+df_mean_sd <- df %>% group_by(Language, step) %>% summarise(mean_I = mean(I), sd_I = sd(I), lower = mean_I - sd_I, upper = mean_I + sd_I)
+df_mean_sd <- as.data.table(df_mean_sd)
+
+ggplot(df_mean_sd, aes(x=(step), y=mean_I, colour = Language))+
+  geom_ribbon(aes(ymin = lower, ymax = upper, colour = Language), fill = "#F4F4F4") +
+  geom_point(aes(), size=1.5) +
+  theme_classic() +
+  scale_colour_manual("Languages & Platforms", values = c('#bebada','#4477AA','#8dd3c7','#b3de69','#fdb462','#f85345','#ffb2b6')) +
+  #scale_fill_manual("Standard deviation", values="#F4F4F4") +
+  labs(x="Time (days)", y="Infected") +
+  scale_x_continuous(breaks = seq(0, 751, 50)) +
+  theme(legend.position="top",legend.direction="horizontal")
+
+ggsave(paste0(path,"/6-Resultats/Graphiques/Infected graph 1 VF.png"))
+ggsave(filename = paste0(path,"/6-Resultats/Graphiques/Infected graph 1 VF.eps"),
+       #plot = print(p),
+       device = cairo_ps)
+```
+
+```{r}
+ggplot(df_mean_sd[step<=100], aes(x=(step), y=mean_I, colour = Language))+
+  geom_ribbon(aes(ymin = lower, ymax = upper, colour = Language), fill = "#F4F4F4") +
+  geom_point(aes(), size=1.5) +
+  theme_classic() +
+  scale_colour_manual("Languages & Platforms", values = c('#bebada','#4477AA','#8dd3c7','#b3de69','#fdb462','#f85345','#ffb2b6')) +
+  #scale_fill_manual("Standard deviation", values="#F4F4F4") +
+  labs(x="Time (days)", y="Infected") +
+  scale_x_continuous(breaks = seq(0, 751, 10)) +
+  theme(legend.position="top",legend.direction="horizontal")
+
+ggsave(paste0(path,"/6-Resultats/Graphiques/Infected graph 2 VF.png"))
+ggsave(filename = paste0(path,"/6-Resultats/Graphiques/Infected graph 2 VF.eps"),
+       device = cairo_ps)
+```
+
+```{r}
+ggplot(df[step> 100 & step<=400], aes(x=as.factor(step), y=I, colour = Language))+
+  geom_point(size=1.5) +
+  theme_classic() +
+  scale_colour_manual(values = c("blue", "green3", "red", "lightblue", "yellow", "brown", "pink")) +
+  labs(x="Time (days)", y="Infected") +
+  scale_x_discrete(breaks = seq(0, 751, 50))
+```
+
+## ANOVA
+
+```{r}
+df_anova <- as.data.table(df %>% group_by(simu) %>%
+  filter(I == max(I)))
+```
+
+```{r}
+ggboxplot(df_anova, x = "Language", y = "I", 
+          order = c("Cormas", "DSDEVS", "Netlogo", "GAMA", "Python", "C++", "Julia"),
+          ylab = "Maximum 1st infection peak", xlab = "Language")
+
+ggsave(paste0(path,"/6-Resultats/Graphiques/Boxplot max infected peak VF.png"))
+ggsave(filename = paste0(path,"/6-Resultats/Graphiques/Boxplot max infected peak VF.eps"),
+       device = cairo_ps)
+```
+
+```{r}
+ggboxplot(df_anova, x = "Language", y = "step", 
+          order = c("Cormas", "DSDEVS", "Netlogo", "GAMA", "Python", "C++", "Julia"),
+          ylab = "Step 1st peak", xlab = "Language")
+
+ggsave(paste0(path,"/6-Resultats/Graphiques/Boxplot step max infected peak VF.png"))
+ggsave(filename = paste0(path,"/6-Resultats/Graphiques/Boxplot step max infected peak VF.eps"),
+       device = cairo_ps)
+```
+
+## Hybrid clustering (multi-step) : 1st hierarchical clustering - 2nd K means
+
+tuto théorique :
+https://heka-ai.medium.com/time-series-clustering-b84bcaaa63ac
+
+tuto R :
+http://www.sthda.com/english/wiki/wiki.php?id_contents=7955
+
+
+tuto th silhouette score :
+https://towardsdatascience.com/time-series-clustering-deriving-trends-and-archetypes-from-sequential-data-bb87783312b4
+
+https://rstudio-pubs-static.s3.amazonaws.com/474160_0761428e8683401e941a92a4177254a4.html
+
+Au vu des graphs précédents, nous remarquons la présence de séries pour lesquelles il n'y a pas eu d'infection ou de réinfection.
+Nous les enlèverons de l'analyse car se sont des outliers qui risquent de fausser notre analyse comparative.
+
+```{r}
+simus_outliers <- df[step == 730 & S>=0.5,simu]
+df_outliers <- df[ !(simu %in% simus_outliers),]
+```
+
+```{r}
+mat_I <-  df[,c("step","I","simu")] %>% pivot_wider(names_from = step, values_from = I)
+
+mat_I_outliers <-  df_outliers[,c("step","I","simu")] %>% pivot_wider(names_from = step, values_from = I)
+```
+
+### Euclidean distance
+
+Pas de NA pour euclidean distance 
+TS doivent être de même longueur
+
+#### Infected
+
+Le cluster 3 comprend uniquement les outliers donc on essaie sans : marche pas met tout dans 1 meme cluster
+
+```{r}
+set.seed(123)
+
+### Hierarchical clustering
+res.hc.I <- eclust(mat_I[,2:732], "hclust", method = "ward.D2", graph = TRUE) 
+grp.I <- res.hc.I$cluster
+
+clus.centers.I <- aggregate(mat_I[,2:732], list(grp.I), mean)
+#clus.centers.I
+
+clus.centers.I <- clus.centers.I[,-1]
+#clus.centers.I
+
+### Dendogramm Hierarchical clustering ###
+fviz_dend(res.hc.I, rect = TRUE, show_labels = TRUE, cex = 0.5) 
+### Ordonnancement des clusters sur le dendogramm ###
+res.hc.I$cluster[res.hc.I$order]
+### Matrice simulation / cluster
+cbind(mat_I[,1], res.hc.I$cluster)
+```
+
+```{r}
+### Nice représentation résultats hierarchical clustering ###
+fviz_dend(res.hc.I, 
+          show_labels = FALSE,
+          k_colors = c("black","black","black","black","black","black","black","black"),
+          rect = TRUE,
+          cex = 0.6)
+
+ggsave(paste0(path,"/6-Resultats/Graphiques/Dendrogram Hierarchical Euclidean VF.png"))
+ggsave(filename = paste0(path,"/6-Resultats/Graphiques/Dendrogram Hierarchical Euclidean VF.eps"),
+       device = cairo_ps)
+```
+
+```{r}
+### Proportions de simulations de chaque language par cluster (hierarchical cluster) ###
+test <- as.data.table(mat_I[,1])
+test <- str_split(test$simu, "_", simplify = TRUE)
+
+prop_simu_hierar <- as.data.table(cbind(test, res.hc.I$cluster))
+prop_simu_hierar <- prop_simu_hierar[,-2]
+colnames(prop_simu_hierar) <- c("Language", "Cluster")
+
+prop_simu_hierar <- prop_simu_hierar %>% 
+  group_by(Cluster, Language) %>% 
+  summarise(nb = n())
+
+prop_simu_hierar <- prop_simu_hierar %>% 
+  group_by(Cluster) %>%
+  mutate(N = sum(nb))
+
+prop_simu_hierar <- as.data.table(prop_simu_hierar)
+# Pourcentage de chaque language dans chaque cluster
+prop_simu_hierar[,prop := round((nb/N)*100,0)]
+
+prop_simu_hierar
+```
+
+```{r}
+### K-means en prenant comme centres de clusters initiaux les centres de clusters du hierarchical clustering performé ci dessus
+km.res.I <- eclust(mat_I[,2:732], "kmeans", k = clus.centers.I, graph = FALSE)
+# Silhouette width of observation
+sil.I <- km.res.I$silinfo$widths[, 1:3]
+# Objects with negative silhouette
+neg_sil_index.I <- which(sil.I[, 'sil_width'] < 0)
+#sil.I[neg_sil_index.I, , drop = FALSE]
+#fviz_silhouette(km.res.I)
+
+### Comparaison
+table(km.res.I$cluster, res.hc.I$cluster)
+
+fviz_dend(res.hc.I, 
+          k = 8, 
+          #k_colors = c('#bebada','#1978BA','#8dd3c7','#207305','#b3de69','#fdb462','#f85345','#ffb2b6'),
+          label_cols =  km.res.I$cluster[res.hc.I$order],
+          color_labels_by_k = TRUE,
+          rect = TRUE,
+          show_labels = TRUE, 
+          cex = 0.6)
+
+#ggsave("C:/Users/Hanae/OneDrive/Desktop/VIA IRD/REPRODUCTIBILITE SEIR/6-Resultats/Graphs VF/Dendrogram Euclidean VF.png")
+#ggsave(filename = "C:/Users/Hanae/OneDrive/Desktop/VIA IRD/REPRODUCTIBILITE SEIR/6-Resultats/Graphs VF/Dendrogram Euclidean VF.eps",
+#       device = cairo_ps)
+#dend %>% set("labels_col", value =c('#bebada','#1978BA','#8dd3c7','#207305','#b3de69','#fdb462','#f85345','#ffb2b6'))
+
+km.res.I$cluster[res.hc.I$order]
+
+cbind(mat_I[,1], km.res.I$cluster)
+
+#fviz_cluster(km.res.I, ellipse.type = "norm")
+```
+
+Le cluster le plus à droite est le cluster n°6. 
+Comme observé dans le tableau de comparaison précédent, 2 des observations définies comme appartenant au cluster 6 par le hierarchical clustering ont été reclassifiées dans le cluster 5 (le bleu turquoise avant avant dernier) dans le résultat final donné par le k-means clustering.
+
+```{r}
+### Proportions de simulations de chaque language par cluster (hybrid cluster) ###
+
+prop_simu_hybrid <- as.data.table(cbind(test, km.res.I$cluster))
+prop_simu_hybrid <- prop_simu_hybrid[,-2]
+colnames(prop_simu_hybrid) <- c("Language", "Cluster")
+
+prop_simu_hybrid <- prop_simu_hybrid %>% 
+  group_by(Cluster, Language) %>% 
+  summarise(nb = n())
+
+prop_simu_hybrid <- prop_simu_hybrid %>% 
+  group_by(Cluster) %>%
+  mutate(N = sum(nb))
+
+prop_simu_hybrid <- as.data.table(prop_simu_hybrid)
+# Pourcentage de chaque language dans chaque cluster
+prop_simu_hybrid[,prop := round((nb/N)*100,0)]
+
+prop_simu_hybrid
+```
+
+Hierarchical :
+Les clusters de gauche à droite correspondent respectivement aux plateformes suivantes : C++, outliers, Cormas & DSDEVS, NE, Julia, NH & ND & GAMA, NH & ND & GAMA & Python, GAMA & Python & ND.
+
+Le cluster de gauche (bleu) regroupe les simulations C++ et est très éloigné des autres clusters.
+
+K-means : 
+
+### Dynamic Time Warping (DTW)
+
+#### Infected
+
+Lorsqu'on garde les simulations qui ne se sont pas lancées ainsi que celles pour lesquelles il n'y a pas eu ré-infection, cela crée un bruit et sépare en 2 clusters : les simulations qui se sont lancées et celles qui ne se sont pas lancées.
+
+```{r}
+### dtw
+res.dtw.I <- tsclust(series = mat_I[,2:732], type = "hierarchical", distance = "dtw_basic") # method = average
+grp.dtw.I <- res.dtw.I@cluster
+grp.dtw.I
+
+clus.centers.dtw.I <- aggregate(mat_I[,2:732], list(grp.dtw.I), mean)
+clus.centers.dtw.I
+
+clus.centers.dtw.I <- clus.centers.dtw.I[,-1]
+clus.centers.dtw.I
+
+
+km.res.dtw.I <- eclust(mat_I[,2:732], "kmeans", k = clus.centers.dtw.I, graph = FALSE)
+# Silhouette width of observation
+sil.dtw.I <- km.res.dtw.I$silinfo$widths[, 1:3]
+# Objects with negative silhouette
+neg_sil_index.dtw.I <- which(sil.dtw.I[, 'sil_width'] < 0)
+sil.dtw.I[neg_sil_index.dtw.I, , drop = FALSE]
+fviz_silhouette(km.res.dtw.I)
+
+table(km.res.dtw.I$cluster, res.dtw.I@cluster)
+ 
+
+fviz_dend(res.dtw.I, k = 2, 
+          k_colors = c("#1978BA", "#b3de69"),
+          label_cols =  km.res.dtw.I$cluster[res.dtw.I$order], cex = 0.6)
+
+
+cbind(mat_I[,1], km.res.dtw.I$cluster)
+```
+
+On relance alors le clustering sur les simulations s’étant lancées. Nous obtenons 2 clusters.
+
+```{r}
+### Hierarchical clustering DTW
+res.dtw.I.outliers <- tsclust(series = mat_I_outliers[,2:732], type = "hierarchical", distance = "dtw_basic") # method = average
+grp.dtw.I.outliers <- res.dtw.I.outliers@cluster
+
+clus.centers.dtw.I.outliers <- aggregate(mat_I_outliers[,2:732], list(grp.dtw.I.outliers), mean)
+#clus.centers.dtw.I.outliers
+
+clus.centers.dtw.I.outliers <- clus.centers.dtw.I.outliers[,-1]
+#clus.centers.dtw.I.outliers
+```
+
+```{r}
+### K means ###
+km.res.dtw.I.outliers <- eclust(mat_I_outliers[,2:732], "kmeans", k = clus.centers.dtw.I.outliers, graph = FALSE)
+# Silhouette width of observation
+sil.dtw.I.outliers <- km.res.dtw.I.outliers$silinfo$widths[, 1:3]
+# Objects with negative silhouette
+neg_sil_index.dtw.I.outliers <- which(sil.dtw.I.outliers[, 'sil_width'] < 0)
+#sil.dtw.I.outliers[neg_sil_index.dtw.I.outliers, , drop = FALSE]
+fviz_silhouette(km.res.dtw.I.outliers)
+
+table(km.res.dtw.I.outliers$cluster, res.dtw.I.outliers@cluster)
+
+
+fviz_dend(res.dtw.I.outliers, k = 2, 
+          k_colors = c("#1978BA", "#b3de69"),
+          label_cols =  km.res.dtw.I.outliers$cluster[res.dtw.I.outliers$order], cex = 0.6)
+
+ggsave(paste0(path,"/6-Resultats/Graphiques/Dendrogram DTW VF.png"))
+ggsave(filename = paste0(path,"/6-Resultats/Graphiques/Dendrogram DTW VF.eps"),
+       device = cairo_ps)
+
+fviz_dend(res.dtw.I.outliers, k = 2, 
+          k_colors = c("black", "black"),
+          show_labels = FALSE,
+          rect =TRUE, cex = 0.6)
+
+ggsave(paste0(path,"/6-Resultats/Graphiques/Dendrogram Hierarchical DTW VF.png"))
+ggsave(filename = paste0(path,"/6-Resultats/Graphiques/Dendrogram Hierarchical DTW VF.eps"),
+       device = cairo_ps)
+
+#library(dendextend)
+#dend <- dendextend::set(dend_dtw, "labels_col", colour=c("#1978BA", "#b3de69"))
+
+cbind(mat_I_outliers[,1], km.res.dtw.I.outliers$cluster)
+```
+
+
+```{r}
+### Proportions de simulations de chaque language par cluster (hybrid cluster) ###
+test_dtw <- as.data.table(mat_I_outliers[,1])
+test_dtw <- str_split(test_dtw$simu, "_", simplify = TRUE)
+
+prop_simu_hybrid_dtw <- as.data.table(cbind(test_dtw, km.res.dtw.I.outliers$cluster))
+prop_simu_hybrid_dtw <- prop_simu_hybrid_dtw[,-2]
+colnames(prop_simu_hybrid_dtw) <- c("Language", "Cluster")
+
+prop_simu_hybrid_dtw <- prop_simu_hybrid_dtw %>% 
+  group_by(Cluster, Language) %>% 
+  summarise(nb = n())
+
+prop_simu_hybrid_dtw <- prop_simu_hybrid_dtw %>% 
+  group_by(Cluster) %>%
+  mutate(N = sum(nb))
+
+prop_simu_hybrid_dtw <- as.data.table(prop_simu_hybrid_dtw)
+# Pourcentage de chaque language dans chaque cluster
+prop_simu_hybrid_dtw[,prop := round((nb/N)*100,0)]
+
+prop_simu_hybrid_dtw
+```
+
+- cluster 1 : C++, Julia, NE (s explique par graph)
+Cela rejoint les résultats précédents donnés par la distance euclidienne. En effet, sur le dendogramme précédent, la première coupe (la distance la plus grande) sépare les simulations DSDEVS, Netlogo Etienne et Julia des autres.
+
+- cormas et dsdevs passent dans cluster 2 (a l inverse de distance euclidienne ou ils sont plus proches de c++) car plus grande diff d amplitude avec c++ quand on prend en compte shifting. en prenant en compte shifting, cormas et dsdevs plus proche en amplitude des simus autres que julia, ne et c++ (cf graph).
+
+
+Au sein des clusters, les simulations des différentes plateformes se mélangent en partie.
+
+# Distance EDO Julia
+
+```{r}
+# Julia
+EDO_Julia <- read.csv(paste0(path,"/2-Data/data-EDO-Julia.csv"), header = T, sep = ",")
+colnames(EDO_Julia) <- c("step", "S", "E", "I", "R")
+EDO_Julia$simu <- "Julia_EDO"
+EDO_Julia$Language <- "Julia_EDO"
+```
+
+```{r}
+SMA_EDO <- rbind(EDO_Julia, df)
+```
+
+## Euclidean distance
+
+```{r}
+mat_I.EDO <- SMA_EDO[ ,c("step","I","simu")] %>% pivot_wider(names_from = step, values_from = I)
+names <- mat_I.EDO$simu
+
+
+dist_euclidean.I <- proxy::dist(mat_I.EDO[,2:732], mat_I.EDO[,2:732], method = "euclidean")
+dist_euclidean.I <- as.data.table(dist_euclidean.I)
+
+colnames(dist_euclidean.I) <- names
+dist_euclidean.I <- cbind(names, dist_euclidean.I)
+
+dist_euclidean.I_EDO <- dist_euclidean.I[order(dist_euclidean.I$Julia_EDO),1:2]
+dist_euclidean.I_EDO[2:31,]
+
+dist_euclidean.I_EDO <- dist_euclidean.I_EDO[-1,]
+for (i in 1:210) {
+  dist_euclidean.I_EDO[i,rank := i]
+}
+dist_euclidean.I_EDO[1:30,]
+```
+
+```{r}
+temp <- str_split(dist_euclidean.I_EDO$names, "_", simplify = TRUE)
+dist_euclidean.I_EDO <- as.data.table(cbind(temp, dist_euclidean.I_EDO))
+colnames(dist_euclidean.I_EDO) <- c("Language","n_simu","simu","dist_julia_EDO","rank")
+dist_euclidean.I_EDO[1:30,]
+```
+
+Heatmap de 1 à 30 (rang) avec une couleur par language de programmation
+
+```{r}
+temp <- dist_euclidean.I_EDO[1:30,c("Language","rank")]
+
+ggplot() + 
+  geom_segment(aes(x = 0, y = temp$rank, xend = 1, yend = temp$rank, 
+                   color = temp$Language, size = 1)) +
+  theme_classic() +
+  labs(x="", y="Rank Euclidean distance to EDO", colour = "Languages & Platforms") +
+  scale_x_continuous(breaks = seq(0, 1, 1)) + 
+  scale_y_continuous(breaks = seq(0, 30, 5)) +
+  scale_colour_manual("Languages & Platforms", values = c('#bebada','#4477AA','#b3de69','#f85345'))
+```
+
+
+## DTW distance
+
+```{r}
+mat_I.EDO.dtw <- SMA_EDO[ ,c("step","I","simu")] %>% pivot_wider(names_from = step, values_from = I)
+names <- mat_I.EDO.dtw$simu
+
+
+dist_dtw.I <- dtwDist(mat_I.EDO.dtw[,2:732], mat_I.EDO.dtw[,2:732])
+dist_dtw.I <- as.data.table(dist_dtw.I)
+
+colnames(dist_dtw.I) <- names
+dist_dtw.I <- cbind(names, dist_dtw.I)
+
+dist_dtw.I <- dist_dtw.I[order(dist_dtw.I$Julia_EDO),1:2]
+dist_dtw.I[2:31,]
+
+dist_dtw.I <- dist_dtw.I[-1,]
+for (i in 1:210) {
+  dist_dtw.I[i,rank := i]
+}
+```
+

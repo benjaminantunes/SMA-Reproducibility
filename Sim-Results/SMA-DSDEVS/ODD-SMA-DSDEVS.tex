@@ -1,0 +1,171 @@
+
+%\documentclass{article}
+%\usepackage[utf8]{inputenc}
+%\usepackage{amsmath}
+%\usepackage{graphicx}
+%\usepackage[table]{xcolor}
+%\usepackage{float}
+%\restylefloat{table}
+
+
+%\title{DSDEVS-MAS ODD}
+
+%\author{Clément Foucher}
+
+%\date{}
+
+%\begin{document}
+
+%\maketitle
+
+\section{ODD DSDEVS-MAS}
+%\subsection{Overview}
+
+\textit{Source code can be found at the following URL:}\\
+\url{https://gitlab.laas.fr/cfoucher/seir-devs-simulator}
+
+\subsection{Purpose}
+
+This model is intended at representing an epidemic propagation.
+It is based on the SEIR(S) paradigm, whose name describes the sequence of states a subject can be in:
+\begin{itemize}
+\item S (Susceptible): healthy, can be infected;
+\item E (Exposed): has been infected, but is not contagious yes;
+\item I (Infected): has been infected and is contagious;
+\item R (Recovery): not infected any more, healthy, protected from any new infection.
+\end{itemize}
+
+In SEIRS, the subject goes back to the Susceptible state after Recovery, which means it can be infected again.
+
+\subsection{State variables and scales}
+
+The model is agent-based (Multi-Agent System -- MAS).
+
+An agent is mainly characterized by:
+
+\begin{itemize}
+\item is status $\in \{S, E, I, R\}$,
+\item a position ( (X,Y) coordinate) in the world,
+\item its duration for each status: INCUBATION\_PERIOD, INFECTIOUS\_PERIOD and IMMUNE\_PERIOD.
+\end{itemize}
+
+A few additional variables are used for scheduling and are described in the \textit{Design concepts} section below.
+
+The environment is another model which is used to set the rhythm of the various phases of the day.
+
+The agents and the environment are linked together within the world.
+
+%At any given time, an agent has a target, which is the position in the world it tries to reach.
+%As the world is toric, the agent move to their target can cross world boundaries.
+%Each day, each agent will move to one of the 8 surrounding cell in the grid.
+%When an agent reaches its target, is automatically determines a new target on the grid randomly.
+
+\subsection{Process overview and scheduling}
+
+\paragraph{Time resolution and scheduling}
+The model time resolution is the day: each agent will do one sequence of actions each day.
+The model scheduling is handled by a component called the Environment, which has connection to all agents which are used to give them evolution orders.
+
+The structure of the scheduling is as follows:
+\begin{itemize}
+	\item First, a \textbf{Move} event is generated. All agents update their position.
+	\item Second, an \textbf{Update} phase triggers the recomputation of connections between agents based on their position.
+	\item Third, an \textbf{Infect} event is generated. All infected agents emit their status on their Infection output.
+	\item Finally, a \textbf{Wait} phase delays further scheduling events by 1 day.
+\end{itemize}
+
+\paragraph{Agent status change}
+The status of an agent can change based on an event or on time depending on the status.
+An agent in the \textbf{S} status will remain in that status until he receives an infection event.
+When an agent changes its status to either \textbf{E}, \textbf{I} or \textbf{R} status, it will stay in that status for the given period of time he was attributed. Note that based on that duration, an agent will change its status asynchronously, regardless of the day-based resolution.
+The duration for each status of each agent is computed randomly at simulation beginning.
+
+\paragraph{Agent position}
+
+Each agent is assigned a random initial position within the world grid.
+Various agents can be in the same position at the same time.
+The position of each agent is changed randomly to any position within the world boundaries once a day, representing the random movements of subjects during an epidemic.
+
+\paragraph{Model hierarchy: the World}
+
+All the agents as well as the environment are coupled together within a second level of hierarchy: the world.
+
+The model is organized as follows:
+\begin{itemize}
+	\item at root, the \textbf{World} is a component in charge of connecting other sub-components,
+	\item one of the sub-components is the \textbf{Environment}, in charge of scheduling the agents components,
+	\item all other sub-components are the \textbf{Agents}.
+\end{itemize}
+
+The scheduling is done by the Environment, which emits events on its \textbf{Instruction} output.
+All agents are listening on these events, and react to them.
+
+The World is in charge of connecting agents \textbf{Infection} ports based on their proximity.
+It holds a dynamic structure function which is triggered by the Environment, and update \textbf{Infection} connections between agents so that each agent is connected to all other agents whose position is in the 9 adjacent squares (8 surrounding + same square).
+
+\subsection{Design concepts}
+
+\paragraph{Other variables}
+Additionally to the variables depicted previously, agents have some variables required for the DEVS simulator to work as intended.
+
+\begin{itemize}
+    \item \textit{Phase} is a variable $\in \{$Idle, Infect, Get infected$\}$, used for scheduling purpose
+    \item \textit{Time} contains the current simulation time, used for scheduling purpose
+    \item \textit{Next\_time\_event} represents the time at which the next status change will take place
+\end{itemize}
+
+Additionally, an agent has access to the following constants, which are not part of the agent state:
+\begin{itemize}
+    \item \textit{rand} is a variable assigned to an agent and used to generate its random values. Technically, it is used as a constant for accessibility purpose
+    \item \textit{TRANSMISSION\_RATE} is a constant containing the $\beta = 0.5$ value
+    \item \textit{GRID\_WIDTH} and \textit{GRID\_HEIGHT} are constants used in the process of determining the new position
+\end{itemize}
+
+\paragraph{Contamination process}
+
+Each agent has an output which is connected to an input of each agent in 3x3 grid centered on the agent.
+Updating this connections after agents move is taken care of by the World model.
+
+An infected agent will broadcast an "Infect" message on this output during its "Infect" phase.
+An agent with status S receiving one or more "Infect" messages will go through a "Get infected" phase, in which it will determine if it changes it status to E.
+
+The probability of transmission $p$ is determined as $p=1-e^{-\beta*N_i}$, with $N_i$ the number of infection message received, i.e. the number of infected neighbors.
+A draw $t$ is then done in a uniform distribution $\in [0,1]$.
+Finally, if $t<p$, then the agent will change its status to E.
+
+\paragraph{Status Duration}
+The duration for each status of each agent is drawn randomly at simulation beginning.
+Each agent stores its durations within its constants \textbf{INCUBATION\_PERIOD}, \textbf{INFECTIOUS\_PERIOD} and \textbf{IMMUNE\_PERIOD}, with the following correspondence:
+\begin{itemize}
+    \item \textbf{INCUBATION\_PERIOD} = $t_e$
+    \item \textbf{INFECTIOUS\_PERIOD} = $t_i$
+    \item \textbf{IMMUNE\_PERIOD} = $t_r$
+\end{itemize}
+
+It follows these rules:
+\begin{itemize}
+    \item $t_e$ = randomly drawn variable in an exponential distribution with $\lambda = 3$
+    \item $t_i$ = randomly drawn variable in an exponential distribution with $\lambda = 7$
+    \item $t_r$ = randomly drawn variable in an exponential distribution with $\lambda = 365$
+\end{itemize}
+
+\subsection{Details}
+\subsubsection{Initialization}
+
+The default values are as described in the following list. Note that all parameters can be adjusted, either using a GUI or using command-line arguments.
+\begin{itemize}
+    \item Total number of individuals: 20 000
+    \item Grid size: 300x300
+    \item RNG seed: uses current time by default, but can be adjusted to a custom value
+    \item 0.1\% of individuals (20) begin in status I, the others (19980) begin in status S
+    \item Status durations for each individual is determined randomly at model initialization using functions described previously
+    \item Agents initial position on the grid is drawn randomly at model initialization
+\end{itemize}
+\subsubsection{Input}
+\subsubsection{Submodels}
+
+
+%\bibliography{biblio}
+
+%\end{document}
+

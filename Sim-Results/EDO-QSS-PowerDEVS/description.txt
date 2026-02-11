@@ -1,0 +1,6 @@
+parameter for QSS:
+    - deltaQ min = 1e-6
+
+data/model repository: https://gitlab.laas.fr/ysallami/powerdevs-SEIRS
+
+docker for PowerDEVS: https://gitlab.laas.fr/ysallami/powerdevs-docker

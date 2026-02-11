@@ -1,0 +1,55 @@
+\section{ODD SMA Julia}
+
+\subsection{Purpose}
+
+A model of a disease spread in a population. The objective is to implement the same model in different platforms to study reproducibility. The target system is SEIRS model specified with ODEs given in the introduction. 
+
+\subsection{Entities, state variables, and scales}
+
+\begin{itemize}
+    \item One type of entities, i.e. individuals, are characterized by two discrete states, their status and elapsed time in status, and by three duration parameters, dE, dI, dR.
+    \item The status can take four values : status = {S, E, I, R}.
+    \item dE, dI and dR correspond to the status lifespan when equal to E, I and R, respectively.
+    \item The space is a periodic (toroidal) grid. Several agents can be located on the same cell.
+\end{itemize}
+
+\subsection{Process overview and scheduling}
+
+\begin{itemize}
+    \item Time: the time is discrete. One time step correspond to one day.
+    \item Move: Every time step, all individuals move randomly to a different cell. The new position is randomly chosen in the grid (not necessarily the neighboring cells).
+    \item Infection: Every time step, all susceptible individuals (status = S) check for one or several infectious individuals in their neighbourhood (individuals with status = I). If infectious individual are present, the susceptible individual become exposed (status = E) with a certain probability.
+    \item Exposing: Every time step, every individual in state E become I if the time elapsed in state E is greater than the exposed period duration dE.
+    \item Recovering: Every time step, every individual in state I become R if the time elapsed in state I is greater than the infectious period duration dI.
+    \item Immunity loose: Every time step, every individual in state R become S if the time elapsed in state R is greater than the immune period duration dR.
+    \item Scheduling: The order of execution of agent is at random. The state changes are asynchronous, i.e. the computation of an individuals new state is done when the individual is randomly chosen, there is no memorization of individuals previous states.
+\end{itemize}
+
+\subsection{Design concepts}
+
+\begin{itemize}
+    \item Emergence: The number of individuals with status S,E,I and R.
+    \item Interaction: A contact exists between two individuals if they are close proximity in space. An individual is in contact with all individuals that are located in the 8 cells around its own cell, plus the ones on its own cell. The duration of the contact is minimum one time step. The space is periodic in order to avoid boundaries artefact.
+    \item Stochasticity: Individuals move randomly jumping from one cell to another anywhere in the grid. This is done to suppress the space correlation in the infection process in order to respect the ergodic hypothesis made in the ODE system (the target system). In the same way, for each individuals, the status lifespan are initial conditions drawn randomly in the Exponential distribution in respect with the hypothesis of the ODE system.
+\end{itemize}
+
+\subsection{Initialization}
+
+\begin{itemize}
+    \item Total number of individuals : 20000.
+    \item Grid size: 300x300.
+    \item PRNG seed: 11290177.
+    \item PRNG type: Xoshiro.
+    \item 19980 individuals have their status equal to $S$.
+    \item 20 individuals have their status equal to $I$.
+    \item For all the individuals, the status lifespan parameters are drawn randomly in the exponential distribution with the parameter 3, 7 and 365 for $E$, $I$ and $R$ respectively. By definition, parameters values do not change during simulation.
+    \item Agents are located randomly on the grid.
+\end{itemize}
+
+\subsection{Submodels}
+
+\begin{itemize}
+    \item Infection: the probability $p$ for a susceptible individual $S$ to become exposed $E$ is computed as follows:
+    $$p = 1 - e^{(-0.5*Ni)}$$ with $Ni$ the number of infectious individuals in the neighborhood and $0.5$ the force of infection.
+    \item If a draw in the uniform distribution is $Uniform[0;1] < p$, then the individual with status $S$ become $E$. 
+\end{itemize}
