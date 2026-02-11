@@ -1,6 +1,6 @@
 # Reproducibility Study of SEIR Epidemiological Models
 
-This repository contains the code, simulation results, and analysis for a reproducibility study examining implementations of a standard SEIR (Susceptible-Exposed-Infected-Recovered) epidemiological model across multiple agent-based modeling (ABM) platforms and programming languages.
+This repository contains the simulation results and analysisc code for a reproducibility study examining implementations of a standard SEIR (Susceptible-Exposed-Infected-Recovered) epidemiological model across multiple agent-based modeling (ABM) platforms and programming languages.
 
 ## Abstract
 
