@@ -1,0 +1,15 @@
+SmalltalkCISpec {
+  #loading : [
+    SCIMetacelloLoadSpec {
+      #baseline : 'SEIRModel',
+      #directory : 'src',
+      #onWarningLog: true,
+      #onConflict : #useLoaded
+    }
+  ],
+  #testing : {
+    #coverage : {
+      #packages : [ 'SEIR-Model*' ]
+    }
+  }
+}

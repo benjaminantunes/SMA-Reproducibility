@@ -1,0 +1,2 @@
+Windows : g++ -I.\include -o main .\src\*.cpp
+Linux : g++ -I./include -o main ./src/*.cpp

@@ -1,0 +1,71 @@
+ClassDiagram [frame=true framecolor=steelblue label="Diagramme de classe"]
+{
+    class Personne
+    {
+        private etat: string
+        private temps_ecoule: int
+        private dE: int
+        private dI: int
+        private dR: int
+        private aFaitLaTransition: boolean
+        private position_x: int
+        private position_y: int
+
+        public Personne(e: string, e: int, i: int, r: int, x: int, y: int): void
+        public getEtat(): string
+        public getPosition_x(): int
+        public getPosition_y(): int
+        public getTemps_ecoule(): int
+        public getDE(): int
+        public getDI(): int
+        public getDR(): int
+        public getAFaitLaTransition(): boolean
+        public setEtat(string): void
+        public setDE(e: int): void
+        public setDI(i: int): void
+        public setDR(r: int): void
+        public setPosition_x(x: int): void
+        public setPosition_y(y: int): void
+        public setTemps_ecoule(t:int): void
+        public setAFaitLaTransition(aFaitLaTransition: boolean): void
+    }
+
+    class Population
+    {
+        private grille : List
+        private nbre_individu : int
+        private largeur_hauteur : int
+
+        private negExp(mean:double, random: MTRandom): double
+        public Population(): void
+        public initialiserPopulation(random: MTRandom): void
+        public getPersonnes(x:int, y:int) : List
+        public setPersonnes(x: int, y: int, personnes: List): void
+        public getGrille(): List
+    }
+    
+    class ModelSEIR
+    {
+        private population: Population
+        private nombreSusceptibles: int
+        private nombreExposes: int
+        private nombreInfectes: int
+        private nombreRecuperes: int
+        private largeur_hauteur: int
+
+        public ModelSEIR(population: Population): void
+        public deplacerIndividusAleatoirement(random: MTRandom): void
+        public compterInfectesDansVoisinage(x: int, y: int): int
+        public infecter(random: MTRandom): void
+        public exposerIndividus(): void
+        public recupererIndividus(): void
+        public perdreImmunité(): void
+        public getNombreSusceptibles(): int
+        public getNombreExposes(): int
+        public getNombreInfectes(): int
+        public getNombreRecuperes(): int
+    }
+
+    Personne -a-> Population
+    Population "1..*" -- "0..1" ModelSEIR : "         "
+}

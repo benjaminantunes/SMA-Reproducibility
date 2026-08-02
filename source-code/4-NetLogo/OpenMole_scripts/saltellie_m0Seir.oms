@@ -1,0 +1,41 @@
+import _file_.m0Seir._
+
+val replications = Replication(
+    evaluation = model, // the model to run
+    seed = mySeed,         // the seed variable
+    sample = 20,           // the number of model executions
+    aggregation = Seq(propInfected aggregate median, propSuseptible aggregate median,
+                      propExposed aggregate median, propRecovered aggregate median  )
+)
+
+// it's replication how is evaluated in the model
+val sensitivAnalyse = SensitivitySaltelli(
+      evaluation = replications,
+      inputs = Seq(
+          popInit in (10.0, 1000.0),
+          propInfecte in (1.0, 15.0),
+          infectionRadiusI in (1.0, 5.0),
+          beta in (0.0,1.0)
+        ),
+      outputs = Seq(propInfected, propSuseptible, propExposed, propRecovered),
+      sample = 100 // 7 parametres x 10 chemins le nombre de trajectoir est r de k+1  campolongo et al. 2007, An effective screening design for sensitivity analysis of large models
+      //level = 10
+    ) hook (workDirectory / "results_saltelli2")
+
+
+
+val muse = SLURMEnvironment(
+    "delaye",
+    "muse-login.hpc-lr.univ-montp2.fr",
+    // optional parameters
+    partition = "agap_normal", // can be agap_short agap_normal agap_long
+    workDirectory = "/lustre/delaye/openmole",
+    //workDirectory = "/home/delaye/scratch/openmole",
+    sharedDirectory = "/storage/replicated/cirad_users/delaye/openmole",
+    time = 1 hours
+  )
+
+val local = LocalEnvironment(1)
+//sensitivAnalyse on muse by 20
+
+sensitivAnalyse on muse by 50

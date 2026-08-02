@@ -1,0 +1,19 @@
+Per-team first-peak (amplitude % of population):
+      lang   team     n peak_mean peak_sd day_mean day_sd
+    <char> <char> <int>     <num>   <num>    <num>  <num>
+ 1:    C++  C++ 1   100     36.52    0.35     25.5    1.1
+ 2:    C++  C++ 2   100     44.62    0.47     17.0    0.6
+ 3:    C++  C++ 3   100     54.49    0.50     15.0    0.6
+ 4:    C++  C++ 4   100     34.12    0.37     33.4    0.8
+ 5:    C++  C++ 5   100     32.66    0.38     28.4    1.0
+ 6:   Java Java 1    99     32.86    0.37     36.3    0.9
+ 7:   Java Java 2   100     26.56    0.34     45.2    1.4
+ 8:   Java Java 3   100     35.05    0.33     32.3    1.0
+ 9:   Java Java 4   100     40.33    0.31     35.8    0.7
+10:   Java Java 5   100     36.46    0.37     29.9    0.8
+
+Within-technology developer effect:
+
+[C++ (5 teams)] amplitude ANOVA: F(4,495)=47352.7, p=0, eta2(ges)=0.997 | timing KW: H=478.2, p=3.5e-102, eps2=0.958
+
+[Java (5 teams)] amplitude ANOVA: F(4,494)=21785.4, p=0, eta2(ges)=0.994 | timing KW: H=457.2, p=1.2e-97, eps2=0.917

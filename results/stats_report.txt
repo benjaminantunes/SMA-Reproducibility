@@ -1,0 +1,58 @@
+=== PER-PLATFORM SUMMARY (peak = infected count /20000) ===
+Key: <platform>
+   platform     n peak_mean peak_median peak_sd      peak_CI day_mean
+     <fctr> <int>     <num>       <num>   <num>       <char>    <num>
+1:      C++    30      7795        7794      71 [7768, 7821]     38.5
+2:   Cormas    30      6514        6514      86 [6481, 6546]     30.5
+3:     GAMA    30      7267        7264      71 [7240, 7293]     32.3
+4:    Julia    30      8200        8216      81 [8170, 8231]     34.1
+5:  Netlogo    30      7057        7064      59 [7035, 7079]     33.1
+6:   DSDEVS    30      6730        6719      85 [6699, 6762]     29.3
+7:   Python    30      7259        7276      88 [7227, 7292]     31.2
+   day_median day_sd       day_CI n_noreinf
+        <num>  <num>       <char>     <int>
+1:         38    1.0 [38.1, 38.9]         0
+2:         30    1.1 [30.1, 31.0]         3
+3:         32    1.3 [31.8, 32.8]         0
+4:         34    0.7 [33.9, 34.4]         0
+5:         33    0.8 [32.8, 33.4]         0
+6:         29    0.9 [28.9, 29.6]         1
+7:         31    0.9 [30.8, 31.5]         0
+
+=== AMPLITUDE ===
+             Df   Sum Sq  Mean Sq F value    Pr(>F)    
+platform      6 61479054 10246509  1690.7 < 2.2e-16 ***
+Residuals   203  1230291     6061                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+eta^2=0.980 omega^2=0.980
+group SDs:
+    C++  Cormas    GAMA   Julia Netlogo  DSDEVS  Python 
+     71      86      71      81      59      85      88 
+Shapiro W=0.992 p=0.312 ; Levene(mean) F=1.40 p=0.215
+Welch ANOVA F=1527.6 df1=6 df2=90.0 p=3.01e-88 ; Kruskal(amp) H=200.0 p=1.89e-40
+Games-Howell significant pairs: 20 of 21
+
+=== TIMING ===
+Kruskal H=177.0 df=6 p=1.51e-35 ; epsilon^2=0.842
+
+=== DISTANCE TO ODE REFERENCE ===
+   platform   RMSE    DTW
+     <fctr>  <num>  <num>
+1:      C++ 0.0325 0.0094
+2:   Cormas 0.0354 0.0044
+3:   DSDEVS 0.0400 0.0062
+4:     GAMA 0.0374 0.0075
+5:    Julia 0.0397 0.0088
+6:  Netlogo 0.0360 0.0076
+7:   Python 0.0398 0.0076
+
+=== EUCLIDEAN CLUSTERS (ward.D2, k=8) ===
+C1(30): C++ 100%
+C2(31): Cormas 81%, DSDEVS 19%
+C3(25): DSDEVS 92%, Cormas 8%
+C4(4): Cormas 75%, DSDEVS 25%
+C5(37): Netlogo 59%, GAMA 35%, Python 5%
+C6(14): Python 86%, GAMA 14%
+C7(39): Python 41%, GAMA 38%, Netlogo 21%
+C8(30): Julia 100%

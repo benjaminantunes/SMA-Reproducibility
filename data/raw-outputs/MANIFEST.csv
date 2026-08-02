@@ -1,0 +1,10 @@
+group,folder,n_reps,steps,used_in_paper
+C++,C-,30,0-730,TRUE
+Cormas,Cormas,30,0-730,TRUE
+DSDEVS,DSDEVS,30,0-730,TRUE
+GAMA,GAMA,30,0-730,TRUE
+Julia,Julia,30,0-730,TRUE
+Netlogo Dorian,Netlogo-Dorian,30,0-730,TRUE
+Netlogo Etienne,Netlogo-Etienne,30,0-730,FALSE
+Netlogo Hanae,Netlogo-Hanae,30,0-730,FALSE
+Python,Python,30,0-730,TRUE

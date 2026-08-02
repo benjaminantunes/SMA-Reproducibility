@@ -1,0 +1,63 @@
+val popInit = Val[Double]
+val propInfecte = Val[Double]
+val teG = Val[Double]
+val tiG = Val[Double]
+val trG = Val[Double]
+val beta = Val[Double]
+val infectionRadiusI = Val[Double]
+val sd_expo_t = Val[Double]
+val mySeed = Val[Int]
+/*output*/
+val propInfected = Val[Double]
+val propSuseptible = Val[Double]
+val propExposed = Val[Double]
+val propRecovered = Val[Double]
+val integraleInfected = Val[Double]
+val integraleExposed = Val[Double]
+
+val launch = List("random-seed ${mySeed}","setup", "while [ticks < 730] [go]")
+            
+val model = NetLogo6Task(
+  workDirectory / "m0-seir.nlogo",
+  launch,
+  embedWorkspace = false,
+  seed = mySeed
+) set (
+  inputs += (mySeed),
+  outputs += (mySeed),
+  inputs += popInit mapped "pop-init",
+  inputs += propInfecte mapped "prop-infecte",
+  inputs += teG mapped "te-g",
+  inputs += tiG mapped "ti-g",
+  inputs += trG mapped "tr-g",
+  inputs += infectionRadiusI mapped "infectionRadius-i",
+  inputs += sd_expo_t mapped "sd_expo_t",
+  inputs += beta mapped "beta",
+  outputs += propInfecte mapped "prop-infecte",
+  outputs += teG mapped "te-g",
+  outputs += tiG mapped "ti-g",
+  outputs += trG mapped "tr-g",
+  inputs += beta mapped "beta",
+  outputs += infectionRadiusI mapped "infectionRadius-i",
+  outputs += sd_expo_t mapped "sd_expo_t",
+  /*observable*/
+  outputs += propInfected mapped "propRecovered",
+  outputs += propSuseptible mapped "propSuseptible",
+  outputs += propExposed mapped "propExposed",
+  outputs += propRecovered mapped "propRecovered",
+  outputs += integraleInfected mapped "integraleInfected",
+  outputs += integraleExposed mapped "integraleExposed",
+  // Default values. Can be removed if OpenMOLE Vals are set by values coming from the workflow
+  
+  // popInit := 1720.0,
+  // propInfecte := 13.0,
+  // teG := 24.0,
+  // tiG := 52.0,
+  // trG := 13.0,
+  // infectionRadiusI := 1.0,
+  sd_expo_t := 2.0,
+  // mySeed := 0
+  
+)
+
+//model hook display
