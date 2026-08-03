@@ -1,14 +1,14 @@
 === PER-PLATFORM SUMMARY (peak = infected count /20000) ===
 Key: <platform>
-   platform     n peak_mean peak_median peak_sd      peak_CI day_mean
-     <fctr> <int>     <num>       <num>   <num>       <char>    <num>
-1:      C++    30      7795        7794      71 [7768, 7821]     38.5
-2:   Cormas    30      6514        6514      86 [6481, 6546]     30.5
-3:     GAMA    30      7267        7264      71 [7240, 7293]     32.3
-4:    Julia    30      8200        8216      81 [8170, 8231]     34.1
-5:  Netlogo    30      7057        7064      59 [7035, 7079]     33.1
-6:   DSDEVS    30      6730        6719      85 [6699, 6762]     29.3
-7:   Python    30      7259        7276      88 [7227, 7292]     31.2
+      platform     n peak_mean peak_median peak_sd      peak_CI day_mean
+        <fctr> <int>     <num>       <num>   <num>       <char>    <num>
+1:         C++    30      7795        7794      71 [7768, 7821]     38.5
+2:      Cormas    30      6514        6514      86 [6481, 6546]     30.5
+3:        GAMA    30      7267        7264      71 [7240, 7293]     32.3
+4:       Julia    30      8200        8216      81 [8170, 8231]     34.1
+5:     Netlogo    30      7057        7064      59 [7035, 7079]     33.1
+6: PythonPDEVS    30      6730        6719      85 [6699, 6762]     29.3
+7:      Python    30      7259        7276      88 [7227, 7292]     31.2
    day_median day_sd       day_CI n_noreinf
         <num>  <num>       <char>     <int>
 1:         38    1.0 [38.1, 38.9]         0
@@ -27,8 +27,10 @@ Residuals   203  1230291     6061
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 eta^2=0.980 omega^2=0.980
 group SDs:
-    C++  Cormas    GAMA   Julia Netlogo  DSDEVS  Python 
-     71      86      71      81      59      85      88 
+        C++      Cormas        GAMA       Julia     Netlogo PythonPDEVS 
+         71          86          71          81          59          85 
+     Python 
+         88 
 Shapiro W=0.992 p=0.312 ; Levene(mean) F=1.40 p=0.215
 Welch ANOVA F=1527.6 df1=6 df2=90.0 p=3.01e-88 ; Kruskal(amp) H=200.0 p=1.89e-40
 Games-Howell significant pairs: 20 of 21
@@ -38,12 +40,12 @@ Tukey HSD significant pairs: 20 of 21 (non-sig: Python-GAMA)
 Kruskal H=177.0 df=6 p=1.51e-35 ; epsilon^2=0.842
 
 === DISTANCE TO ODE REFERENCE ===
-   platform   RMSE    DTW
-     <fctr>  <num>  <num>
-1:      C++ 0.0325 0.0094
-2:   Cormas 0.0354 0.0044
-3:   DSDEVS 0.0400 0.0062
-4:     GAMA 0.0374 0.0075
-5:    Julia 0.0397 0.0088
-6:  Netlogo 0.0360 0.0076
-7:   Python 0.0398 0.0076
+      platform   RMSE    DTW
+        <fctr>  <num>  <num>
+1:         C++ 0.0325 0.0094
+2:      Cormas 0.0354 0.0044
+3: PythonPDEVS 0.0400 0.0062
+4:        GAMA 0.0374 0.0075
+5:       Julia 0.0397 0.0088
+6:     Netlogo 0.0360 0.0076
+7:      Python 0.0398 0.0076

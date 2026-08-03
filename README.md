@@ -43,8 +43,8 @@ SMA-Reproducibility/
 └── results/                # generated tables and reports (regenerable)
 ```
 
-Platform-name note: in the data the PythonPDEVS implementation is labelled `DSDEVS`; the two names
-refer to the same implementation.
+Platform-name note: the PythonPDEVS implementation was labelled `DSDEVS` in earlier versions of the
+data; it is now labelled `PythonPDEVS` throughout (dataset, scripts, outputs and paper).
 
 ## Requirements
 

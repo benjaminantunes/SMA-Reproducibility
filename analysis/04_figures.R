@@ -16,7 +16,7 @@ code <- c("C++"="Cpp","Cormas"="Cor","GAMA"="GAM","Julia"="Jul","NetLogo"="Net",
 
 e<-new.env(); load(file.path(HARM,"df_SMA_serveur_VF.RData"),envir=e); df<-as.data.table(get("df",envir=e))
 df<-df[!Langage %in% c("Netlogo Etienne","Netlogo Hanae")]
-df[Langage=="Netlogo Dorian",Langage:="NetLogo"][Langage=="DSDEVS",Langage:="PythonPDEVS"]
+df[Langage=="Netlogo Dorian",Langage:="NetLogo"]
 df[, platform:=factor(Langage, levels=plats)]
 stopifnot(!any(is.na(df$platform)))
 
@@ -43,7 +43,7 @@ ggsave(file.path(IMG,"fig2_infected_by_platform.png"), p2, width=10, height=4.5,
 
 ## ---- Fig 3: annotated boxplots (peak amplitude and timing) ----
 pk <- fread(file.path(BASE,"results/peaks_per_rep.csv"))
-pk[platform=="Netlogo", platform:="NetLogo"][platform=="DSDEVS", platform:="PythonPDEVS"]
+pk[platform=="Netlogo", platform:="NetLogo"]
 pk$platform <- factor(pk$platform, levels=plats)
 stopifnot(!any(is.na(pk$platform)))
 p3a <- ggplot(pk, aes(platform, peak_count, fill=platform)) + geom_boxplot(show.legend=FALSE) +

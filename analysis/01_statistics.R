@@ -11,7 +11,7 @@ e<-new.env(); load(file.path(BASE,"data/harmonized/df_SMA_serveur_VF.RData"),env
 df<-as.data.table(get("df",envir=e))
 df<-df[!Langage %in% c("Netlogo Etienne","Netlogo Hanae")]
 df[Langage=="Netlogo Dorian", Langage:="Netlogo"]
-df[, platform:=factor(Langage, levels=c("C++","Cormas","GAMA","Julia","Netlogo","DSDEVS","Python"))]
+df[, platform:=factor(Langage, levels=c("C++","Cormas","GAMA","Julia","Netlogo","PythonPDEVS","Python"))]
 
 # ---- per-rep first peak & no-reinfection ----
 rows <- df[step %in% PEAKWIN, .(peak_frac=max(I), peak_day=step[which.max(I)]), by=.(platform,simu)]

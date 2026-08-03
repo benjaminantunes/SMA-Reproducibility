@@ -1,9 +1,9 @@
 
 ===  EUCLIDEAN hybrid (hclust ward.D2 k=8 -> k-means refinement) -- reproduces paper Table 5  ===
 C1(30): C++ 100%
-C2(20): Cormas 95%, DSDEVS 5%
-C3(36): DSDEVS 78%, Cormas 22%
-C4(4): Cormas 75%, DSDEVS 25%
+C2(20): Cormas 95%, PythonPDEVS 5%
+C3(36): PythonPDEVS 78%, Cormas 22%
+C4(4): Cormas 75%, PythonPDEVS 25%
 C5(35): Netlogo 69%, GAMA 29%, Python 3%
 C6(14): Python 86%, GAMA 14%
 C7(39): Python 44%, GAMA 41%, Netlogo 15%

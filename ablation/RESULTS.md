@@ -1,6 +1,6 @@
 # C++ ablation: which implementation choices drive the first-peak divergence?
 
-**Status: exploratory analysis only. Nothing here is written into the paper yet.**
+**Status: these results are reported in the paper (Table 8 and the surrounding discussion).**
 
 ## Method
 A fast, grid-binned C++ SEIRS ABM (`seir_ablation.cpp`) faithful to the original C++ implementation
@@ -32,6 +32,11 @@ original C++ result in the paper (7795 at day ~38). The fast model is therefore 
 | ceil | 8467 | 7802 |
 
 Minimum = 7009 (floor, `>=`); maximum = 8467 (ceil, `>`); **span = 1458 infected**.
+
+Note that the two factors do not fully decompose every platform. Python (continuous, `>=` in
+Table 7) is predicted at 7009 by this table but observes 7259, a ~250-individual residual: the two
+dominant choices set the order of the gap, not each platform exactly, because further finer choices
+(neighbourhood, order, toroidality) remain that the ablation holds fixed at the C++ configuration.
 
 ## Interpretation
 - **The divergence is driven almost entirely by how each implementation turns the continuous

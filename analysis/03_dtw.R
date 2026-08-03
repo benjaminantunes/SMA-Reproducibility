@@ -34,7 +34,7 @@ compo(grpD,       "DTW hierarchical (dtw_basic, k=2)")
 compo(kmD$cluster,"DTW hybrid (hier dtw_basic -> k-means refinement)")
 cat("\n--- PUBLISHED DTW (for comparison) ---\n")
 cat("C1(59): 51% C++, 42% Julia, 3% GAMA, 3% NetLogo\n")
-cat("C2(147): 20% DSDEVS, 20% Python, 19% GAMA, 19% NetLogo, 18% Cormas, 3% Julia\n")
+cat("C2(147): 20% PythonPDEVS, 20% Python, 19% GAMA, 19% NetLogo, 18% Cormas, 3% Julia\n")
 
 sink(file.path(O,"dtw_report.txt"))
 compo(kmD$cluster,"DTW hybrid (dtw_basic hierarchical -> k-means refinement), no-reinfection excluded")
