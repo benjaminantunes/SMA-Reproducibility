@@ -36,6 +36,9 @@ SMA-Reproducibility/
 │   ├── 03_dtw.R            # DTW clustering (downsampled, k=2)
 │   ├── 04_figures.R        # figures 1-3 (ODE, trajectories, boxplots)
 │   └── 05_students.R       # student developer-effect analysis + figure
+├── ablation/               # controlled C++ ablation of implementation choices
+│   ├── seir_ablation.cpp   # fast, flag-driven SEIRS ABM (varies one choice at a time)
+│   └── RESULTS.md          # ablation results and interpretation
 ├── figures/                # generated figures (regenerable)
 └── results/                # generated tables and reports (regenerable)
 ```
@@ -81,6 +84,26 @@ Rscript analysis/05_students.R      # -> figures/fig6_students.png, results/stud
   their own cluster; Cormas and PythonPDEVS carry the runs without reinfection).
 - Student data: within a single language, different developers still diverge strongly (C++
   `eta^2 = 0.997`, Java `eta^2 = 0.994`), showing a large developer effect.
+
+## Ablation (why the implementations diverge)
+
+`ablation/` contains a fast, flag-driven C++ SEIRS model that varies one implementation choice at a
+time (residence-time rounding, transition test, within-step order, synchronous vs asynchronous
+update) while keeping everything else fixed. Its baseline reproduces the original C++ result
+(7,802 vs 7,795 infected). Build and run:
+
+```bash
+cd ablation
+g++ -O2 -o seir_ablation seir_ablation.cpp
+./seir_ablation floor infect_move gt fixed 30 1 sync    # baseline
+./seir_ablation round infect_move gt fixed 30 1 sync    # round durations
+./seir_ablation floor infect_move ge fixed 30 1 sync    # >= transition test
+./seir_ablation floor infect_move gt fixed 30 1 async   # asynchronous update
+```
+
+Flags: `rounding {floor|round|ceil|cont}`, `order {infect_move|move_infect}`, `thresh {gt|ge}`,
+`redraw {fixed|redraw}`, `nreps`, `seed0`, `update {sync|async}`. Full results and interpretation
+are in `ablation/RESULTS.md`.
 
 ## Data dictionary
 
