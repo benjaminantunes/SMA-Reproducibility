@@ -1,41 +1,41 @@
 #!/usr/bin/env Rscript
-# DTW clustering robustness: downsample the infected series (every 5th step) so the
-# full pairwise DTW is tractable, then reproduce the published hybrid DTW (k=2,
-# excluding no-reinfection runs). Compares to the published DTW composition.
-suppressMessages({library(data.table); library(dtw)})
+# DTW clustering, exactly as published: the hybrid procedure applied with DTW.
+# Hierarchical step = tsclust (dtwclust) with the dtw_basic distance and its default
+# average linkage, no window constraint, k=2; then a k-means refinement seeded by the
+# hierarchical cluster centres. The runs without reinfection are excluded first.
+# Reproduces the published two-cluster DTW composition (59 / 147).
+suppressMessages({library(data.table); library(dtw); library(dtwclust)})
 set.seed(123)
 BASE <- normalizePath(getwd())
+O <- file.path(BASE,"results"); dir.create(O, showWarnings=FALSE)
 e<-new.env(); load(file.path(BASE,"data/harmonized/df_SMA_serveur_VF.RData"),envir=e)
 df<-as.data.table(get("df",envir=e))
 df<-df[!Langage %in% c("Netlogo Etienne","Netlogo Hanae")]; df[Langage=="Netlogo Dorian",Langage:="Netlogo"]
 w<-dcast(df, simu+Langage~step, value.var="I"); labs<-as.character(w$Langage); M<-as.matrix(w[,-(1:2)])
 
-# exclude no-reinfection runs (as in the published DTW analysis)
-lateI <- df[step>=400, .(lateI=mean(I)), by=simu]
-keep <- w$simu %in% lateI[lateI>=1e-4, simu]
+# exclude no-reinfection runs (keyed on Langage+simu, aligned to w's row order)
+lateI <- df[step>=400, .(lateI=mean(I)), by=.(Langage,simu)]
+nrkey <- lateI[lateI<1e-4, paste(Langage,simu)]
+keep  <- !(paste(w$Langage,w$simu) %in% nrkey)
 Mk<-M[keep,]; labk<-labs[keep]
-# downsample every 5th step (731 -> 147 points)
-idx <- seq(1, ncol(Mk), by=5)
-Md <- Mk[, idx]
-cat(sprintf("kept %d sims (dropped %d no-reinfection); series length %d -> %d after downsampling\n",
-            sum(keep), sum(!keep), ncol(Mk), ncol(Md)))
 
-D <- dtwDist(Md)                       # full pairwise DTW on the short series
-hcD<-hclust(as.dist(D),"ward.D2"); grpD<-cutree(hcD,2)
-centD<-t(sapply(1:2, function(k) colMeans(Md[grpD==k,,drop=FALSE])))
-kmD<-kmeans(Md, centers=centD, iter.max=100)
+# hybrid DTW: dtw_basic hierarchical (default avg linkage, k=2) -> k-means refinement
+hcD <- tsclust(lapply(seq_len(nrow(Mk)), function(i) Mk[i,]), type="hierarchical", distance="dtw_basic")
+grpD<- hcD@cluster
+kmD <- kmeans(Mk, centers=aggregate(Mk,list(grpD),mean)[,-1], iter.max=100)
 
 compo <- function(cl, tag){
   cat("\n===", tag, "===\n")
   for(k in sort(unique(cl))){tb<-sort(round(100*table(labk[cl==k])/sum(cl==k)),decreasing=TRUE);tb<-tb[tb>0]
     cat(sprintf("Cluster %d (%d): %s\n",k,sum(cl==k),paste(sprintf("%s %d%%",names(tb),tb),collapse=", ")))}
 }
-compo(grpD, "DTW hierarchical (k=2), downsampled")
-compo(kmD$cluster, "DTW hybrid (hier -> k-means), downsampled")
-cat("\n--- PUBLISHED DTW ---\n")
+cat(sprintf("kept %d sims (dropped %d no-reinfection); series length %d\n", sum(keep), sum(!keep), ncol(Mk)))
+compo(grpD,       "DTW hierarchical (dtw_basic, k=2)")
+compo(kmD$cluster,"DTW hybrid (hier dtw_basic -> k-means refinement)")
+cat("\n--- PUBLISHED DTW (for comparison) ---\n")
 cat("C1(59): 51% C++, 42% Julia, 3% GAMA, 3% NetLogo\n")
 cat("C2(147): 20% DSDEVS, 20% Python, 19% GAMA, 19% NetLogo, 18% Cormas, 3% Julia\n")
 
-sink(file.path(BASE,"results/dtw_downsampled_report.txt"))
-compo(kmD$cluster, "DTW hybrid (hier -> k-means), downsampled (every 5th step)")
+sink(file.path(O,"dtw_report.txt"))
+compo(kmD$cluster,"DTW hybrid (dtw_basic hierarchical -> k-means refinement), no-reinfection excluded")
 sink()

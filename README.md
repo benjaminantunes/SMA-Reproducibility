@@ -31,9 +31,9 @@ SMA-Reproducibility/
 │   ├── raw-outputs/        # per-implementation, per-replication CSVs (step,S,E,I,R)
 │   └── student-data/       # student implementations (C++ / Java), *.RData
 ├── analysis/               # R scripts that reproduce the paper (run from repo root)
-│   ├── 01_statistics.R     # per-platform summary, ANOVA/Welch/Kruskal, effect sizes, post-hoc
-│   ├── 02_clustering.R     # hybrid hierarchical + k-means (Euclidean, k=8)
-│   ├── 03_dtw.R            # DTW clustering (downsampled, k=2)
+│   ├── 01_statistics.R     # per-platform summary, ANOVA/Welch/Kruskal, effect sizes, Tukey + Games-Howell post-hoc
+│   ├── 02_clustering.R     # hybrid hierarchical + k-means (Euclidean, k=8); reproduces the Table 5 contingency
+│   ├── 03_dtw.R            # hybrid DTW clustering (dtw_basic, no window, k=2); reproduces the published 59/147 split
 │   ├── 04_figures.R        # figures 1-3 (ODE, trajectories, boxplots)
 │   └── 05_students.R       # student developer-effect analysis + figure
 ├── ablation/               # controlled C++ ablation of implementation choices
@@ -51,7 +51,7 @@ refer to the same implementation.
 **To reproduce the analysis (recommended path):** R (>= 4.0) with the packages
 
 ```r
-install.packages(c("data.table","ggplot2","effectsize","rstatix","FSA","dtw","dendextend"))
+install.packages(c("data.table","ggplot2","effectsize","rstatix","FSA","dtw","dtwclust","dendextend"))
 ```
 
 The harmonized dataset and the raw outputs are provided, so the full analysis reproduces **without

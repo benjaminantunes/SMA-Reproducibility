@@ -32,6 +32,7 @@ group SDs:
 Shapiro W=0.992 p=0.312 ; Levene(mean) F=1.40 p=0.215
 Welch ANOVA F=1527.6 df1=6 df2=90.0 p=3.01e-88 ; Kruskal(amp) H=200.0 p=1.89e-40
 Games-Howell significant pairs: 20 of 21
+Tukey HSD significant pairs: 20 of 21 (non-sig: Python-GAMA)
 
 === TIMING ===
 Kruskal H=177.0 df=6 p=1.51e-35 ; epsilon^2=0.842
@@ -46,13 +47,3 @@ Kruskal H=177.0 df=6 p=1.51e-35 ; epsilon^2=0.842
 5:    Julia 0.0397 0.0088
 6:  Netlogo 0.0360 0.0076
 7:   Python 0.0398 0.0076
-
-=== EUCLIDEAN CLUSTERS (ward.D2, k=8) ===
-C1(30): C++ 100%
-C2(31): Cormas 81%, DSDEVS 19%
-C3(25): DSDEVS 92%, Cormas 8%
-C4(4): Cormas 75%, DSDEVS 25%
-C5(37): Netlogo 59%, GAMA 35%, Python 5%
-C6(14): Python 86%, GAMA 14%
-C7(39): Python 41%, GAMA 38%, Netlogo 21%
-C8(30): Julia 100%

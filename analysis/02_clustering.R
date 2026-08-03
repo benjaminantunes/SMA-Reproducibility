@@ -24,8 +24,8 @@ kmE<-kmeans(M, centers=centE, iter.max=100)
 compo(grpE, labs, "EUCLIDEAN hierarchical (k=8)")
 compo(kmE$cluster, labs, "EUCLIDEAN hybrid (hier -> k-means refinement)")
 
-## The DTW clustering is computed separately (and quickly) in 03_dtw.R.
-
-cat("\n--- PUBLISHED (Euclidean, k=8) for comparison ---\n")
-cat("Euclidean k=8: C1=100%C++ ; noreinf(4)=75%Cormas/25%PythonPDEVS ; PythonPDEVS/Cormas splits ;\n")
-cat("  94%Julia ; 69%NetLogo/28%GAMA ; 86%Python/14%GAMA ; 44%Python/41%GAMA/15%NetLogo\n")
+## The DTW clustering is computed separately in 03_dtw.R.
+## The hybrid result reproduces the paper's platform-by-cluster contingency table (Table 5).
+sink(file.path(O,"euclidean_clusters_report.txt"))
+compo(kmE$cluster, labs, "EUCLIDEAN hybrid (hclust ward.D2 k=8 -> k-means refinement) -- reproduces paper Table 5")
+sink()

@@ -35,6 +35,7 @@ shap<-shapiro.test(residuals(fit)); lev<-car::leveneTest(peak_count~platform,dat
 welch<-oneway.test(peak_count~platform,data=rows,var.equal=FALSE)
 kw_amp<-kruskal.test(peak_count~platform,data=rows)
 gh<-rows %>% games_howell_test(peak_count~platform)
+tuk<-as.data.table(TukeyHSD(fit)$platform,keep.rownames="pair")   # primary post-hoc (assumptions hold)
 grp_sd<-tapply(rows$peak_count,rows$platform,sd)
 
 # ---- timing ----
@@ -48,16 +49,12 @@ distref <- rows[0]; distref<-df[, .(mu=mean(I)), by=.(platform,step)][
   , .(RMSE=round(sqrt(mean((mu-refI[step+1])^2)),4),
       DTW=round(dtw(mu, refI[1:.N], distance.only=TRUE)$normalizedDistance,4)), by=platform]
 
-# ---- clustering (Euclidean ward.D2 k=8; DTW k=2 excluding no-reinfection) ----
-w<-dcast(df, simu+platform~step, value.var="I"); labs<-as.character(w$platform); M<-as.matrix(w[,-(1:2)])
-hcE<-hclust(dist(M,"euclidean"),"ward.D2"); clE<-cutree(hcE,8)
-eucl<-sapply(sort(unique(clE)), function(k){tb<-sort(round(100*table(labs[clE==k])/sum(clE==k)),decreasing=TRUE);tb<-tb[tb>0]
-  sprintf("C%d(%d): %s",k,sum(clE==k),paste(sprintf("%s %d%%",names(tb),tb),collapse=", "))})
+# Clustering (Euclidean hybrid and DTW hybrid) is computed in 02_clustering.R and 03_dtw.R.
 
 # ---- write ----
 fwrite(summ, file.path(O,"summary_table.csv")); fwrite(rows, file.path(O,"peaks_per_rep.csv"))
 fwrite(distref, file.path(O,"distance_to_reference.csv")); fwrite(gh, file.path(O,"gameshowell_amplitude.csv"))
-fwrite(dunn, file.path(O,"dunn_timing.csv"))
+fwrite(tuk, file.path(O,"tukey_amplitude.csv")); fwrite(dunn, file.path(O,"dunn_timing.csv"))
 sink(file.path(O,"stats_report.txt"))
 cat("=== PER-PLATFORM SUMMARY (peak = infected count /20000) ===\n"); print(summ)
 cat("\n=== AMPLITUDE ===\n"); print(an)
@@ -67,9 +64,10 @@ cat(sprintf("Shapiro W=%.3f p=%.3g ; Levene(mean) F=%.2f p=%.3g\n",shap$statisti
 cat(sprintf("Welch ANOVA F=%.1f df1=%d df2=%.1f p=%.3g ; Kruskal(amp) H=%.1f p=%.3g\n",
   welch$statistic,welch$parameter[1],welch$parameter[2],welch$p.value,kw_amp$statistic,kw_amp$p.value))
 cat(sprintf("Games-Howell significant pairs: %d of %d\n", sum(gh$p.adj<0.05), nrow(gh)))
+cat(sprintf("Tukey HSD significant pairs: %d of %d (non-sig: %s)\n", sum(tuk$`p adj`<0.05), nrow(tuk),
+  paste(tuk[`p adj`>=0.05, pair], collapse="; ")))
 cat("\n=== TIMING ===\n"); cat(sprintf("Kruskal H=%.1f df=%d p=%.3g ; epsilon^2=%.3f\n",kw$statistic,kw$parameter,kw$p.value,eps$effsize))
 cat("\n=== DISTANCE TO ODE REFERENCE ===\n"); print(distref)
-cat("\n=== EUCLIDEAN CLUSTERS (ward.D2, k=8) ===\n"); cat(eucl,sep="\n")
 sink()
 writeLines(readLines(file.path(O,"stats_report.txt")))
 cat("\nOutputs -> results/\n")
